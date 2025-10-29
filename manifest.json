@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini Auto-Scroll",
+  "version": "1.0",
+  "description": "Автоматически прокручивает чат Gemini, когда генерируется ответ.",
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
