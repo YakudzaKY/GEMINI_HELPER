@@ -11,12 +11,15 @@ const NEAR_BOTTOM_THRESHOLD_PX = 1;
 const SCROLL_SMOOTH_DISTANCE_THRESHOLD_PX = 150;
 const MIN_SCROLL_INTERVAL_MS = 250;
 const MAX_NODES_TO_INSPECT = 400;
+const MODEL_RESPONSE_SELECTOR = 'model-response';
+const MODEL_RESPONSE_TAG_NAME = 'MODEL-RESPONSE';
 
 let scrollContainer = null;
 let debounceTimer = null;
 let pendingAnimationFrame = null;
 let throttleTimeoutId = null;
 let lastScrollTime = 0;
+let lastKnownModelResponse = null;
 
 const bodyObserver = new MutationObserver(handleMutations);
 observeBodyWhenReady();
@@ -46,13 +49,16 @@ function observeBodyWhenReady() {
 function handleMutations(mutationsList) {
   const container = getScrollContainer();
   if (!container) {
+    lastKnownModelResponse = null;
     return;
   }
 
   let shouldScroll = false;
+  let loggedTailRemoval = false;
+  const previousLastModelResponse = lastKnownModelResponse;
 
   for (const mutation of mutationsList) {
-    if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) {
+    if (mutation.type !== 'childList') {
       continue;
     }
 
@@ -67,11 +73,32 @@ function handleMutations(mutationsList) {
       continue;
     }
 
+    if (!loggedTailRemoval && mutation.removedNodes.length > 0) {
+      const removedModelResponses = collectModelResponses(mutation.removedNodes);
+      const candidate =
+        (previousLastModelResponse &&
+          removedModelResponses.includes(previousLastModelResponse) &&
+          previousLastModelResponse) ||
+        (mutation.nextSibling === null && removedModelResponses.length > 0
+          ? removedModelResponses[removedModelResponses.length - 1]
+          : null);
+
+      if (candidate) {
+        loggedTailRemoval = true;
+        logRemovedModelResponse(candidate);
+      }
+    }
+
+    if (shouldScroll || mutation.addedNodes.length === 0) {
+      continue;
+    }
+
     if (addedNodesContainTargets(mutation.addedNodes)) {
       shouldScroll = true;
-      break;
     }
   }
+
+  lastKnownModelResponse = getLastModelResponse(container);
 
   if (shouldScroll) {
     debouncedScroll();
@@ -124,6 +151,67 @@ function nodeHasTargetTag(node) {
   }
 
   return false;
+}
+
+function collectModelResponses(removedNodes) {
+  const responses = [];
+
+  for (const node of removedNodes) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node;
+      if (element.tagName === MODEL_RESPONSE_TAG_NAME) {
+        responses.push(element);
+      }
+      if (typeof element.querySelectorAll === 'function') {
+        responses.push(...element.querySelectorAll(MODEL_RESPONSE_SELECTOR));
+      }
+      continue;
+    }
+
+    if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE && node.querySelectorAll) {
+      responses.push(...node.querySelectorAll(MODEL_RESPONSE_SELECTOR));
+    }
+  }
+
+  if (responses.length <= 1) {
+    return responses;
+  }
+
+  return Array.from(new Set(responses));
+}
+
+function getLastModelResponse(container) {
+  if (!container) {
+    return null;
+  }
+
+  try {
+    const responses = container.querySelectorAll(MODEL_RESPONSE_SELECTOR);
+    if (responses.length === 0) {
+      return null;
+    }
+    return responses[responses.length - 1];
+  } catch (error) {
+    console.warn('Failed to locate model responses.', error);
+    return null;
+  }
+}
+
+function logRemovedModelResponse(modelResponse) {
+  if (!modelResponse) {
+    return;
+  }
+
+  try {
+    const serialized =
+      typeof modelResponse.outerHTML === 'string'
+        ? modelResponse.outerHTML
+        : modelResponse.innerHTML || modelResponse.textContent || '';
+
+    console.log('[Gemini Autoscroll] Removed tail <model-response> contents:', serialized);
+  } catch (error) {
+    console.warn('Failed to serialize removed <model-response> contents.', error, modelResponse);
+  }
 }
 
 function debouncedScroll() {

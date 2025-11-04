@@ -21,6 +21,7 @@ An unpacked Chrome/Chromium extension that keeps the Gemini web chat (`https://g
 - `content.js` injects a filtered `MutationObserver` into the chat history.
 - When Gemini appends meaningful elements (`<p>`, images, tables, code blocks, etc.), the script schedules a throttled, animation-frame-aligned scroll to the bottom.
 - Scrolls run only while the stop button is visible, preventing accidental jumps during idle states.
+- When the last `<model-response>` disappears from the feed, the script logs its HTML markup to the developer console so you can inspect or archive it before it is gone.
 
 ### Files
 
@@ -52,6 +53,7 @@ Everything executes locally; no external dependencies required.
 - `content.js` ставит точечный `MutationObserver` на ленту сообщений Gemini.
 - При добавлении значимых элементов (абзацы, изображения, таблицы, код) скрипт планирует прокрутку, синхронизированную с `requestAnimationFrame`, и повторяет её только при необходимости.
 - Скролл запускается, только если на экране видна кнопка остановки генерации, чтобы не мешать статичным диалогам.
+- Как только исчезает `<model-response>`, скрипт печатает его HTML в консоль разработчика, чтобы успеть сохранить важное содержимое.
 
 ### Файлы
 
