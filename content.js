@@ -16,6 +16,11 @@ const MODEL_RESPONSE_TAG_NAME = 'MODEL-RESPONSE';
 const MODEL_RESPONSE_STORAGE_KEY = 'geminiRemovedResponses';
 const MAX_STORED_MODEL_RESPONSES = 10;
 const SANITIZE_REMOVE_SELECTORS = ['.avatar-gutter', '.response-container-header', '.response-container-footer'];
+const SETTINGS_STORAGE_KEY = 'geminiAutoscrollSettings';
+const DEFAULT_SETTINGS = {
+  autoScroll: true,
+  autoSave: true,
+};
 
 let scrollContainer = null;
 let debounceTimer = null;
@@ -24,14 +29,16 @@ let throttleTimeoutId = null;
 let lastScrollTime = 0;
 let lastKnownModelResponse = null;
 const modelResponseSnapshots = new WeakMap();
+let bodyObserver = null;
+let autoScrollEnabled = DEFAULT_SETTINGS.autoScroll;
+let autoSaveEnabled = DEFAULT_SETTINGS.autoSave;
 
-const bodyObserver = new MutationObserver(handleMutations);
-observeBodyWhenReady();
-
-// Initial scroll after load gives the chat a chance to settle.
-setTimeout(smartScrollToBottom, 500);
+initialize();
 
 function observeBodyWhenReady() {
+  if (!bodyObserver) {
+    return;
+  }
   if (document.body) {
     bodyObserver.observe(document.body, { childList: true, subtree: true });
     console.log('Observer attached to document body.');
@@ -48,6 +55,99 @@ function observeBodyWhenReady() {
     },
     { once: true }
   );
+}
+
+function initialize() {
+  loadSettings().finally(() => {
+    bodyObserver = new MutationObserver(handleMutations);
+    observeBodyWhenReady();
+    if (autoScrollEnabled) {
+      setTimeout(smartScrollToBottom, 500);
+    }
+  });
+
+  if (chrome?.storage?.onChanged) {
+    chrome.storage.onChanged.addListener(handleStorageChanges);
+  }
+}
+
+function loadSettings() {
+  return new Promise((resolve) => {
+    if (!chrome?.storage?.local) {
+      resolve();
+      return;
+    }
+
+    chrome.storage.local.get({ [SETTINGS_STORAGE_KEY]: DEFAULT_SETTINGS }, (result) => {
+      if (chrome.runtime && chrome.runtime.lastError) {
+        console.warn('Failed to read settings, using defaults.', chrome.runtime.lastError);
+        resolve();
+        return;
+      }
+
+      applySettings(result[SETTINGS_STORAGE_KEY] || DEFAULT_SETTINGS);
+      resolve();
+    });
+  });
+}
+
+function handleStorageChanges(changes, areaName) {
+  if (areaName !== 'local' || !Object.prototype.hasOwnProperty.call(changes, SETTINGS_STORAGE_KEY)) {
+    return;
+  }
+
+  applySettings(changes[SETTINGS_STORAGE_KEY].newValue || DEFAULT_SETTINGS);
+}
+
+function applySettings(settings) {
+  const nextSettings = {
+    ...DEFAULT_SETTINGS,
+    ...(settings || {}),
+  };
+
+  const nextAutoScroll = nextSettings.autoScroll !== false;
+  const nextAutoSave = nextSettings.autoSave !== false;
+
+  const autoScrollChanged = nextAutoScroll !== autoScrollEnabled;
+  const autoSaveChanged = nextAutoSave !== autoSaveEnabled;
+
+  autoScrollEnabled = nextAutoScroll;
+  autoSaveEnabled = nextAutoSave;
+
+  if (autoScrollChanged) {
+    if (!autoScrollEnabled) {
+      cancelScheduledScroll();
+    } else {
+      debouncedScroll();
+    }
+  }
+
+  if (autoSaveChanged && !autoSaveEnabled) {
+    // Allow existing snapshots to be GC'd.
+    console.log('Auto-save disabled; new responses will not be captured.');
+  }
+}
+
+function cancelScheduledScroll() {
+  clearTimeout(debounceTimer);
+  debounceTimer = null;
+
+  if (throttleTimeoutId !== null) {
+    clearTimeout(throttleTimeoutId);
+    throttleTimeoutId = null;
+  }
+
+  if (pendingAnimationFrame !== null) {
+    const cancel =
+      window.cancelAnimationFrame ||
+      window.webkitCancelAnimationFrame ||
+      window.mozCancelAnimationFrame ||
+      window.msCancelAnimationFrame;
+    if (typeof cancel === 'function') {
+      cancel(pendingAnimationFrame);
+    }
+    pendingAnimationFrame = null;
+  }
 }
 
 function handleMutations(mutationsList) {
@@ -78,7 +178,7 @@ function handleMutations(mutationsList) {
       continue;
     }
 
-    if (!loggedTailRemoval && mutation.removedNodes.length > 0) {
+    if (autoSaveEnabled && !loggedTailRemoval && mutation.removedNodes.length > 0) {
       const removedModelResponses = collectModelResponses(mutation.removedNodes);
       const candidate =
         (previousLastModelResponse &&
@@ -100,23 +200,29 @@ function handleMutations(mutationsList) {
 
     if (addedNodesContainTargets(mutation.addedNodes)) {
       shouldScroll = true;
-      snapshotRequested = true;
+      if (autoSaveEnabled) {
+        snapshotRequested = true;
+      }
     }
   }
 
   const currentLastModelResponse = getLastModelResponse(container);
-  if (snapshotRequested && currentLastModelResponse) {
-    captureModelResponseSnapshot(currentLastModelResponse);
+  if (autoSaveEnabled) {
+    if (snapshotRequested && currentLastModelResponse) {
+      captureModelResponseSnapshot(currentLastModelResponse);
+    }
+
+    if (currentLastModelResponse !== lastKnownModelResponse && currentLastModelResponse) {
+      captureModelResponseSnapshot(currentLastModelResponse);
+    }
   }
 
-  if (currentLastModelResponse !== lastKnownModelResponse && currentLastModelResponse) {
-    captureModelResponseSnapshot(currentLastModelResponse);
-  }
+  lastKnownModelResponse = autoSaveEnabled ? currentLastModelResponse : null;
 
-  lastKnownModelResponse = currentLastModelResponse;
-
-  if (shouldScroll) {
+  if (shouldScroll && autoScrollEnabled) {
     debouncedScroll();
+  } else if (!autoScrollEnabled) {
+    cancelScheduledScroll();
   }
 }
 
@@ -213,7 +319,7 @@ function getLastModelResponse(container) {
 }
 
 function logRemovedModelResponse(modelResponse) {
-  if (!modelResponse) {
+  if (!autoSaveEnabled || !modelResponse) {
     return;
   }
 
@@ -349,7 +455,7 @@ function stripUnwantedNodes(root) {
 }
 
 function captureModelResponseSnapshot(modelResponse) {
-  if (!modelResponse) {
+  if (!autoSaveEnabled || !modelResponse) {
     return;
   }
 
@@ -365,6 +471,7 @@ function captureModelResponseSnapshot(modelResponse) {
 
 function persistRemovedModelResponse(serializedHtml) {
   if (
+    !autoSaveEnabled ||
     typeof chrome === 'undefined' ||
     !chrome.storage ||
     !chrome.storage.local ||
@@ -410,13 +517,24 @@ function persistRemovedModelResponse(serializedHtml) {
 }
 
 function debouncedScroll() {
+  if (!autoScrollEnabled) {
+    cancelScheduledScroll();
+    return;
+  }
+
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
+    if (!autoScrollEnabled) {
+      cancelScheduledScroll();
+      return;
+    }
+
     if (pendingAnimationFrame !== null) {
       return;
     }
 
-    const raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
+    const raf =
+      window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
     if (typeof raf === 'function') {
       pendingAnimationFrame = raf(() => {
         pendingAnimationFrame = null;
@@ -431,6 +549,10 @@ function debouncedScroll() {
 
 // --- Scroll Logic ---
 function smartScrollToBottom() {
+  if (!autoScrollEnabled) {
+    return;
+  }
+
   const now = typeof performance !== 'undefined' && typeof performance.now === 'function'
     ? performance.now()
     : Date.now();

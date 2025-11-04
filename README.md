@@ -23,6 +23,7 @@ An unpacked Chrome/Chromium extension that keeps the Gemini web chat (`https://g
 - Scrolls run only while the stop button is visible, preventing accidental jumps during idle states.
 - When the last `<model-response>` disappears from the feed, the script captures its HTML and stores it for the popup to preview or export.
 - The extension popup keeps the most recent `<model-response>` snapshots with a sandboxed preview and raw HTML for quick retrieval.
+- Use the extension options page to toggle auto-scroll and auto-save when you need manual control.
 - Code blocks inside the popup preview expose a one-click copy button for quick reuse.
 
 ### Files
@@ -32,6 +33,9 @@ An unpacked Chrome/Chromium extension that keeps the Gemini web chat (`https://g
 - `popup.html` — popup markup for browsing captured responses.
 - `popup.js` — popup logic that renders previews and keeps the list in sync.
 - `popup.css` — lightweight styling for the popup layout.
+- `options.html` — settings page markup for toggling automation features.
+- `options.js` — settings page logic wired to Chrome storage.
+- `options.css` — basic styling for the options interface.
 - `icons/` — toolbar icon assets for the extension action.
 
 Everything executes locally; no external dependencies required.
@@ -61,6 +65,7 @@ Everything executes locally; no external dependencies required.
 - Скролл запускается, только если на экране видна кнопка остановки генерации, чтобы не мешать статичным диалогам.
 - Как только исчезает `<model-response>`, скрипт сохраняет его HTML для всплывающего окна, чтобы успеть забрать нужное содержимое.
 - В окне расширения (значок на панели) всегда под рукой свежий список `<model-response>` с изолированным предпросмотром и исходным HTML.
+- На странице настроек можно отключить автоскролл и автосохранение, если требуется ручной режим.
 - В предпросмотре кода во всплывающем окне появилась кнопка «Копировать» в один клик.
 
 ### Файлы
@@ -70,6 +75,9 @@ Everything executes locally; no external dependencies required.
 - `popup.html` — разметка всплывающего окна со списком удалённых ответов.
 - `popup.js` — логика окна: предпросмотр и синхронизация списка.
 - `popup.css` — минимальное оформление всплывающего окна.
+- `options.html` — страница настроек с переключателями автоматизации.
+- `options.js` — логика сохранения настроек через Chrome storage.
+- `options.css` — стиль для интерфейса настроек.
 - `icons/` — иконки для кнопки расширения в панели.
 
 Расширение работает полностью локально и не требует сторонних зависимостей.

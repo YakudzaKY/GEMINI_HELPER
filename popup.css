@@ -31,15 +31,16 @@ body {
 .header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 8px;
   gap: 8px;
+  justify-content: space-between;
 }
 
 .title {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
+  flex: 1;
 }
 
 button {
@@ -63,6 +64,12 @@ button:disabled {
   border-radius: 4px;
   text-align: center;
   font-size: 13px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .response-list {

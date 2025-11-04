@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Gemini Auto-Scroll Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>Gemini Auto-Scroll</h1>
+        <p class="subtitle">Manage automation features for the Gemini chat page.</p>
+      </header>
+
+      <section class="settings">
+        <label class="setting">
+          <input type="checkbox" id="auto-scroll" />
+          <span class="setting__title">Auto-scroll the conversation</span>
+          <span class="setting__hint">Keeps the streaming response in view so Gemini finishes every answer.</span>
+        </label>
+
+        <label class="setting">
+          <input type="checkbox" id="auto-save" />
+          <span class="setting__title">Capture removed responses</span>
+          <span class="setting__hint">Stores the latest deleted <code>&lt;model-response&gt;</code> snapshots for the popup preview.</span>
+        </label>
+      </section>
+
+      <footer class="footer">
+        <button id="reset-defaults" type="button">Restore Defaults</button>
+        <span id="status-label" role="status" aria-live="polite"></span>
+      </footer>
+    </main>
+
+    <script src="options.js" type="module"></script>
+  </body>
+</html>

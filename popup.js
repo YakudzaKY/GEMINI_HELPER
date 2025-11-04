@@ -13,6 +13,7 @@ const OVERLAY_TOP_PADDING_PX = 28;
 
 const responseListEl = document.getElementById('response-list');
 const emptyStateEl = document.getElementById('empty-state');
+const settingsButtonEl = document.getElementById('open-settings');
 const clearButtonEl = document.getElementById('clear-log');
 const templateEl = document.getElementById('response-item-template');
 
@@ -24,6 +25,9 @@ function init() {
     return;
   }
 
+  if (settingsButtonEl) {
+    settingsButtonEl.addEventListener('click', handleOpenSettings);
+  }
   clearButtonEl.addEventListener('click', handleClearClick);
 
   if (chrome?.storage?.onChanged) {
@@ -329,6 +333,18 @@ function handleClearClick() {
     }
     renderList([]);
   });
+}
+
+function handleOpenSettings() {
+  if (chrome?.runtime?.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+    return;
+  }
+
+  if (chrome?.runtime?.getURL) {
+    const optionsUrl = chrome.runtime.getURL('options.html');
+    window.open(optionsUrl, '_blank', 'noopener,noreferrer');
+  }
 }
 
 function formatTimestamp(date) {
