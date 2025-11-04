@@ -149,10 +149,10 @@ function buildFrameDocument(html) {
       .gemini-copy-btn--overlay {
         position: absolute;
         top: 8px;
-        right: 8px;
+        left: 8px;
       }
       .gemini-copy-btn--header {
-        margin-left: auto;
+        margin-right: auto;
       }
       .gemini-code-header {
         display: flex;
@@ -237,7 +237,12 @@ function attachCopyButton(container, target, preferHeader) {
     if (header) {
       header.classList.add('gemini-code-header');
       button.classList.add('gemini-copy-btn--header');
-      header.appendChild(button);
+      const firstChild = header.firstChild;
+      if (firstChild) {
+        header.insertBefore(button, firstChild);
+      } else {
+        header.appendChild(button);
+      }
       return;
     }
   }
