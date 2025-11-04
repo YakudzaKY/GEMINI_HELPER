@@ -21,12 +21,17 @@ An unpacked Chrome/Chromium extension that keeps the Gemini web chat (`https://g
 - `content.js` injects a filtered `MutationObserver` into the chat history.
 - When Gemini appends meaningful elements (`<p>`, images, tables, code blocks, etc.), the script schedules a throttled, animation-frame-aligned scroll to the bottom.
 - Scrolls run only while the stop button is visible, preventing accidental jumps during idle states.
-- When the last `<model-response>` disappears from the feed, the script logs its HTML markup to the developer console so you can inspect or archive it before it is gone.
+- When the last `<model-response>` disappears from the feed, the script captures its HTML and stores it for the popup to preview or export.
+- The extension popup keeps the most recent `<model-response>` snapshots with a sandboxed preview and raw HTML for quick retrieval.
 
 ### Files
 
 - `manifest.json` — extension manifest in the repository root.
 - `content.js` — DOM observer and autoscroll logic.
+- `popup.html` — popup markup for browsing captured responses.
+- `popup.js` — popup logic that renders previews and keeps the list in sync.
+- `popup.css` — lightweight styling for the popup layout.
+- `icons/` — toolbar icon assets for the extension action.
 
 Everything executes locally; no external dependencies required.
 
@@ -53,11 +58,16 @@ Everything executes locally; no external dependencies required.
 - `content.js` ставит точечный `MutationObserver` на ленту сообщений Gemini.
 - При добавлении значимых элементов (абзацы, изображения, таблицы, код) скрипт планирует прокрутку, синхронизированную с `requestAnimationFrame`, и повторяет её только при необходимости.
 - Скролл запускается, только если на экране видна кнопка остановки генерации, чтобы не мешать статичным диалогам.
-- Как только исчезает `<model-response>`, скрипт печатает его HTML в консоль разработчика, чтобы успеть сохранить важное содержимое.
+- Как только исчезает `<model-response>`, скрипт сохраняет его HTML для всплывающего окна, чтобы успеть забрать нужное содержимое.
+- В окне расширения (значок на панели) всегда под рукой свежий список `<model-response>` с изолированным предпросмотром и исходным HTML.
 
 ### Файлы
 
 - `manifest.json` — манифест расширения в корне репозитория.
 - `content.js` — логика наблюдения за DOM и автоскролла.
+- `popup.html` — разметка всплывающего окна со списком удалённых ответов.
+- `popup.js` — логика окна: предпросмотр и синхронизация списка.
+- `popup.css` — минимальное оформление всплывающего окна.
+- `icons/` — иконки для кнопки расширения в панели.
 
 Расширение работает полностью локально и не требует сторонних зависимостей.

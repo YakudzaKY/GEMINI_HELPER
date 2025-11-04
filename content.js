@@ -13,6 +13,8 @@ const MIN_SCROLL_INTERVAL_MS = 250;
 const MAX_NODES_TO_INSPECT = 400;
 const MODEL_RESPONSE_SELECTOR = 'model-response';
 const MODEL_RESPONSE_TAG_NAME = 'MODEL-RESPONSE';
+const MODEL_RESPONSE_STORAGE_KEY = 'geminiRemovedResponses';
+const MAX_STORED_MODEL_RESPONSES = 10;
 
 let scrollContainer = null;
 let debounceTimer = null;
@@ -208,10 +210,52 @@ function logRemovedModelResponse(modelResponse) {
         ? modelResponse.outerHTML
         : modelResponse.innerHTML || modelResponse.textContent || '';
 
-    console.log('[Gemini Autoscroll] Removed tail <model-response> contents:', serialized);
+    persistRemovedModelResponse(serialized);
   } catch (error) {
     console.warn('Failed to serialize removed <model-response> contents.', error, modelResponse);
   }
+}
+
+function persistRemovedModelResponse(serializedHtml) {
+  if (
+    typeof chrome === 'undefined' ||
+    !chrome.storage ||
+    !chrome.storage.local ||
+    typeof serializedHtml !== 'string'
+  ) {
+    return;
+  }
+
+  const entry = {
+    html: serializedHtml,
+    capturedAt: Date.now(),
+    length: serializedHtml.length,
+  };
+
+  chrome.storage.local.get({ [MODEL_RESPONSE_STORAGE_KEY]: [] }, (result) => {
+    if (chrome.runtime && chrome.runtime.lastError) {
+      console.warn(
+        'Failed to access storage for removed <model-response> contents.',
+        chrome.runtime.lastError
+      );
+      return;
+    }
+
+    const existing = Array.isArray(result[MODEL_RESPONSE_STORAGE_KEY])
+      ? result[MODEL_RESPONSE_STORAGE_KEY].slice()
+      : [];
+    existing.push(entry);
+    const trimmed = existing.slice(-MAX_STORED_MODEL_RESPONSES);
+
+    chrome.storage.local.set({ [MODEL_RESPONSE_STORAGE_KEY]: trimmed }, () => {
+      if (chrome.runtime && chrome.runtime.lastError) {
+        console.warn(
+          'Failed to persist removed <model-response> contents.',
+          chrome.runtime.lastError
+        );
+      }
+    });
+  });
 }
 
 function debouncedScroll() {

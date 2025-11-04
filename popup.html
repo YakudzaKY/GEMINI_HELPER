@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Gemini Removed Responses</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <h1 class="title">Removed Responses</h1>
+      <button id="clear-log" type="button" title="Clear log">Clear</button>
+    </header>
+    <section id="empty-state" class="empty">
+      No captured responses yet. Chat for a while and check back.
+    </section>
+    <ul id="response-list" class="response-list" aria-live="polite" aria-busy="false"></ul>
+    <template id="response-item-template">
+      <li class="response-item">
+        <div class="meta">
+          <time class="timestamp"></time>
+          <span class="length"></span>
+        </div>
+        <details>
+          <summary>Preview</summary>
+          <iframe class="preview-frame" sandbox="allow-same-origin"></iframe>
+          <details class="raw-details">
+            <summary>HTML</summary>
+            <pre class="raw-html"></pre>
+          </details>
+        </details>
+      </li>
+    </template>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
