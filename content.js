@@ -15,7 +15,7 @@ const MODEL_RESPONSE_SELECTOR = 'model-response';
 const MODEL_RESPONSE_TAG_NAME = 'MODEL-RESPONSE';
 const MODEL_RESPONSE_STORAGE_KEY = 'geminiRemovedResponses';
 const MAX_STORED_MODEL_RESPONSES = 10;
-const SANITIZE_REMOVE_SELECTORS = ['.avatar-gutter'];
+const SANITIZE_REMOVE_SELECTORS = ['.avatar-gutter', '.response-container-header', '.response-container-footer'];
 
 let scrollContainer = null;
 let debounceTimer = null;
