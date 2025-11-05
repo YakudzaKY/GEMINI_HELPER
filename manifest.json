@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Gemini Auto-Scroll",
+  "name": "Gemini Helper",
+  "description": "Автоскролл и автосейв для Gemini: поддерживает поток и сохраняет исчезающие ответы.",
   "version": "1.0",
-  "description": "Автоматическая прокрутка на Gemini, чтобы не терялось содержимое.",
   "permissions": [
     "storage"
   ],
   "action": {
-    "default_title": "Gemini Auto-Scroll",
+    "default_title": "Gemini Helper",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",

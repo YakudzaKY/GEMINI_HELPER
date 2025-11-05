@@ -1,87 +1,64 @@
-# GEMINI Autoscroll Extension
+# Gemini Helper — автоскролл и автосейв для Gemini
 
-## 🇬🇧 English
+Этот расширенный помощник для Gemini в Chrome/Chromium решает две реальные проблемы интерфейса:
 
-An unpacked Chrome/Chromium extension that keeps the Gemini web chat (`https://gemini.google.com`) pinned to the latest response. The native interface stops rendering when the viewport leaves the streaming area, so long answers get truncated and Gemini reports a connection failure. The content script watches for new DOM nodes and scrolls to the bottom at the right cadence, keeping the response pipeline "alive" until the end.
+- Автоскролл: во время генерации поток у Gemini может обрываться, если список сообщений не «прижат» к низу. Длинные ответы недописываются, а соединение кажется «потерянным». Автоскролл мягко поддерживает позицию внизу, чтобы стрим доходил до конца.
+- Автосейв: при прерывании генерации Gemini иногда удаляет своё незавершённое сообщение. Если это была первая пара запрос–ответ, может исчезнуть весь чат. Автосейв делает локальные снимки последнего ответа и сохраняет их, чтобы вы ничего не потеряли.
 
-> 100% of this codebase was built by **CODEX (GPT-5 Codex High)**.
+Все данные хранятся локально, без сетевых запросов.
 
-### Why Google's UI Needs Help
+## Возможности
 
-- When the response grows, the freshly appended nodes drop out of Gemini's "active" zone; the streaming pipeline stops delivering tokens even though the connection is fine.
-- Long answers are not merely truncated—the generation is aborted, the pending message disappears, and the request can wipe the entire thread if it was the conversation opener.
-- The extension nudges the scroll position so the newest nodes stay active and Gemini finishes streaming every token.
+- Автоскролл во время стрима ответа.
+- Автосохранение исчезающих ответов (история до 10 записей) с просмотром в попапе и копированием кода в один клик.
+- Отдельные переключатели для каждого помощника: можно включить/выключить автоскролл и автосейв независимо.
 
-### Installation
+## Установка
 
-1. Clone the repository: `git clone https://github.com/YakudzaKY/GEMINI_AUTOSCROLL.git`.
-2. Open `chrome://extensions` and enable **Developer mode**.
-3. Click **Load unpacked**, select the cloned repository folder (the one that contains `manifest.json`), and confirm.
+1. Откройте `chrome://extensions` и включите режим разработчика.
+2. Нажмите «Загрузить распакованное» и укажите папку с этим проектом (там, где лежит `manifest.json`).
 
-### How It Works
+## Использование
 
-- `content.js` injects a filtered `MutationObserver` into the chat history.
-- When Gemini appends meaningful elements (`<p>`, images, tables, code blocks, etc.), the script schedules a throttled, animation-frame-aligned scroll to the bottom.
-- Scrolls run only while the stop button is visible, preventing accidental jumps during idle states.
-- When the last `<model-response>` disappears from the feed, the script captures its HTML and stores it for the popup to preview or export.
-- The extension popup keeps the most recent `<model-response>` snapshots with a sandboxed preview and raw HTML for quick retrieval.
-- Use the extension options page to toggle auto-scroll and auto-save when you need manual control.
-- Code blocks inside the popup preview expose a one-click copy button for quick reuse.
+- По умолчанию всё включено. Откройте `https://gemini.google.com`, начните генерацию — автоскролл удержит поток, а автосейв сохранит ответ, даже если он исчезнет.
+- Нажмите на иконку расширения, чтобы открыть попап: там доступны последние сохранённые ответы с предпросмотром, «сырой» HTML и кнопки копирования кода.
 
-### Files
+## Настройки
 
-- `manifest.json` — extension manifest in the repository root.
-- `content.js` — DOM observer and autoscroll logic.
-- `popup.html` — popup markup for browsing captured responses.
-- `popup.js` — popup logic that renders previews and keeps the list in sync.
-- `popup.css` — lightweight styling for the popup layout.
-- `options.html` — settings page markup for toggling automation features.
-- `options.js` — settings page logic wired to Chrome storage.
-- `options.css` — basic styling for the options interface.
-- `icons/` — toolbar icon assets for the extension action.
-
-Everything executes locally; no external dependencies required.
+- Откройте страницу параметров расширения (через попап или `chrome://extensions`) и настройте:
+  - `Автоскролл` — удерживает ленту у конца во время генерации.
+  - `Автосейв` — снимает и сохраняет последний ответ, если он исчезает.
 
 ---
 
-## 🇷🇺 Русский
+## English
 
-Распакованное расширение для Chrome/Chromium, которое удерживает веб-чат Gemini (`https://gemini.google.com`) на последнем сообщении. В стандартном интерфейсе, если область просмотра выходит за пределы стриминга, нижние блоки становятся «неактивными», Gemini решает, что связь потеряна, и обрывает длинные ответы. Контент-скрипт отслеживает появление новых узлов и своевременно прокручивает чат до конца, позволяя модели договорить до последнего символа.
+Gemini Helper for Chrome/Chromium turns a one‑trick autoscroll into a practical helper:
 
-> 100% кода написано **CODEX (GPT-5 Codex High)**.
+- Auto‑Scroll: Gemini may stop streaming if the chat isn’t pinned to the bottom. Long answers get cut short and appear as failed. Auto‑Scroll gently keeps the view at the tail so the stream completes.
+- Auto‑Save: When generation is interrupted, Gemini sometimes deletes its own pending message — and if it was the first request‑response pair, the entire chat can disappear. Auto‑Save snapshots the latest response locally so you don’t lose it.
 
-### Зачем это нужно
+All data stays local; no network requests.
 
-- При росте ответа новые блоки вываливаются из "активной" зоны Gemini; фронтенд перестаёт принимать токены, хотя соединение не рвётся.
-- Длинные ответы не просто обрезаются — генерация отменяется, сообщение исчезает, а если это был первый запрос в чате, пропадает весь диалог.
-- Расширение возвращает прокрутку к активным узлам, и Gemini успевает договорить ответ до конца.
+## Features
 
-### Установка
+- Auto‑scroll during streaming.
+- Auto‑save disappearing responses (up to 10 recent items) with popup preview and one‑click code copy.
+- Separate toggles for each helper: enable/disable auto‑scroll and auto‑save independently.
 
-1. Склонируйте репозиторий: `git clone https://github.com/YakudzaKY/GEMINI_AUTOSCROLL.git`.
-2. Откройте `chrome://extensions` и включите **Режим разработчика**.
-3. Нажмите **Загрузить распакованное расширение** и укажите корневую папку репозитория (там лежит `manifest.json`), затем подтвердите.
+## Install
 
-### Как работает
+1. Open `chrome://extensions` and enable Developer mode.
+2. Click “Load unpacked” and select this project folder (the one with `manifest.json`).
 
-- `content.js` ставит точечный `MutationObserver` на ленту сообщений Gemini.
-- При добавлении значимых элементов (абзацы, изображения, таблицы, код) скрипт планирует прокрутку, синхронизированную с `requestAnimationFrame`, и повторяет её только при необходимости.
-- Скролл запускается, только если на экране видна кнопка остановки генерации, чтобы не мешать статичным диалогам.
-- Как только исчезает `<model-response>`, скрипт сохраняет его HTML для всплывающего окна, чтобы успеть забрать нужное содержимое.
-- В окне расширения (значок на панели) всегда под рукой свежий список `<model-response>` с изолированным предпросмотром и исходным HTML.
-- На странице настроек можно отключить автоскролл и автосохранение, если требуется ручной режим.
-- В предпросмотре кода во всплывающем окне появилась кнопка «Копировать» в один клик.
+## Usage
 
-### Файлы
+- Defaults are on. Visit `https://gemini.google.com` and start a generation — auto‑scroll keeps the stream alive, and auto‑save preserves the last response even if it vanishes.
+- Click the extension icon to open the popup: browse recent saved responses with sandboxed preview, raw HTML, and copy buttons for code blocks.
 
-- `manifest.json` — манифест расширения в корне репозитория.
-- `content.js` — логика наблюдения за DOM и автоскролла.
-- `popup.html` — разметка всплывающего окна со списком удалённых ответов.
-- `popup.js` — логика окна: предпросмотр и синхронизация списка.
-- `popup.css` — минимальное оформление всплывающего окна.
-- `options.html` — страница настроек с переключателями автоматизации.
-- `options.js` — логика сохранения настроек через Chrome storage.
-- `options.css` — стиль для интерфейса настроек.
-- `icons/` — иконки для кнопки расширения в панели.
+## Settings
 
-Расширение работает полностью локально и не требует сторонних зависимостей.
+- Use the Options page (via popup or `chrome://extensions`) to configure:
+  - `Auto‑Scroll` — keeps the feed pinned to the bottom during generation.
+  - `Auto‑Save` — snapshots and stores the latest response when it disappears.
+
