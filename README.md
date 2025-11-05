@@ -21,7 +21,8 @@
 ## Использование
 
 - По умолчанию всё включено. Откройте `https://gemini.google.com`, начните генерацию — автоскролл удержит поток, а автосейв сохранит ответ, даже если он исчезнет.
-- Нажмите на иконку расширения, чтобы открыть попап: там доступны последние сохранённые ответы с предпросмотром, «сырой» HTML и кнопки копирования кода.
+- Закрепите иконку расширения на панели, чтобы попап всегда был под рукой.
+- Нажмите на иконку расширения, чтобы открыть попап: разверните нужный ответ и получите доступ к последним сохранённым данным с предпросмотром, «сырым» HTML и кнопками копирования кода.
 
 ## Настройки
 
@@ -54,7 +55,8 @@ All data stays local; no network requests.
 ## Usage
 
 - Defaults are on. Visit `https://gemini.google.com` and start a generation — auto‑scroll keeps the stream alive, and auto‑save preserves the last response even if it vanishes.
-- Click the extension icon to open the popup: browse recent saved responses with sandboxed preview, raw HTML, and copy buttons for code blocks.
+- Pin the extension icon to the toolbar so the popup is always handy.
+- Click the extension icon to open the popup: expand the saved response you need to browse recent snapshots with sandboxed preview, raw HTML, and copy buttons for code blocks.
 
 ## Settings
 
